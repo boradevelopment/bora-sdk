@@ -1,3 +1,4 @@
+#pragma once
 
 namespace bora::stl {
     // Move Function for objects like strings or shared pointers

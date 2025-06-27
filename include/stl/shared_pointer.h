@@ -1,9 +1,9 @@
 #pragma once
-#include <cstdint>
 #include "symbols/memory.h"
+#include "stl/control.h"
+#include <macros.h>
 
 namespace bora::stl {
-
 /// @brief Creates a shared pointer that manages the lifetime of an object.
 /// A shared pointer is a smart pointer that retains shared ownership of an object through a pointer.
 /// Multiple shared pointers can point to the same object, and the object is destroyed when the last shared pointer pointing to it is destroyed.
@@ -12,18 +12,12 @@ namespace bora::stl {
 template <typename T>
 class shared_ptr {
 private:
-    T* ptr = nullptr;
-    u64* ref_count = nullptr;
+    bora::stl::ControlBlock<T>* control = nullptr;
 
     void release() {
-        if (ref_count) {
-            if (--(*ref_count) == 0) {
-                if (ptr) {
-                    ptr->~T(); // Explicitly call destructor
-                    bora::memory::deallocate(reinterpret_cast<uint64_t>(ptr));
-                }
-                bora::memory::deallocate(reinterpret_cast<uint64_t>(ref_count));
-            }
+        if (control) {
+            control->release_ref();
+            control = nullptr;
         }
     }
 
@@ -31,37 +25,39 @@ public:
     shared_ptr() = default;
 
     explicit shared_ptr(T* raw) {
-        ptr = raw;
-        ref_count = reinterpret_cast<u64*>(
-            bora::memory::allocate(sizeof(u64))
-        );
-        *ref_count = 1;
+        void* mem = reinterpret_cast<void*>(memory::allocate(sizeof(ControlBlock<T>)));
+        control = new (mem) ControlBlock<T>(raw);
     }
 
     ~shared_ptr() {
         release();
     }
 
-    shared_ptr(const shared_ptr& other) {
-        ptr = other.ptr;
-        ref_count = other.ref_count;
-        if (ref_count) ++(*ref_count);
+shared_ptr(shared_ptr&& other) noexcept {
+    control = other.control;
+    other.control = nullptr;
+}
+
+// Move assignment
+shared_ptr& operator=(shared_ptr&& other) noexcept {
+    if (this != &other) {
+        release();              // Release current control block
+        control = other.control;
+        other.control = nullptr;
+    }
+    return *this;
+}
+
+    T* get() const {
+        return control ? control->ptr : nullptr;
     }
 
-    shared_ptr& operator=(const shared_ptr& other) {
-        if (this != &other) {
-            release();
-            ptr = other.ptr;
-            ref_count = other.ref_count;
-            if (ref_count) ++(*ref_count);
-        }
-        return *this;
-    }
+    T& operator*() const { return *get(); }
+    T* operator->() const { return get(); }
+    bool valid() const { return get() != nullptr; }
 
-    T* get() const { return ptr; }
-    T& operator*() const { return *ptr; }
-    T* operator->() const { return ptr; }
-    bool valid() const { return ptr != nullptr; }
+    u64 use_count() const {
+        return control ? control->use_count() : 0;
+    }
 };
-
 } // namespace bora::stl

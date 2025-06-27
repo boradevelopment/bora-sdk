@@ -1,3 +1,4 @@
+#pragma once
 #include <macros.h>
 
 /// @brief Handles low level memory allocation and deallocation.
@@ -23,4 +24,18 @@ IMPORT_ATTR("bora::memory", "free")
 /// @param pointer A allocated memory pointer to free.
 /// @note This function should only be called with pointers returned by `allocate`.
 extFunc void deallocate(u64 pointer);
+
+/// @brief Copies memory from source to destination.
+/// @param dest The destination memory pointer.
+/// @param src The source memory pointer.
+/// @param size The number of bytes to copy.
+/// @return The destination pointer.
+inline void* copy(void* dest, const void* src, u64 size) {
+    unsigned char* d = static_cast<unsigned char*>(dest);
+    const unsigned char* s = static_cast<const unsigned char*>(src);
+    for (u64 i = 0; i < size; ++i) {
+        d[i] = s[i];
+    }
+    return dest;
+}
 }

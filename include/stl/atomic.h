@@ -1,3 +1,5 @@
+#pragma once
+
 #include <macros.h>
 
 /// @note A basic implementation of atomic operations in the Bora SDK.

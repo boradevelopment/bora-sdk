@@ -1,3 +1,4 @@
+#pragma once
 #include <macros.h>
 
 // The Window Module allows you to create and manage GUI windows in the Bora SDK.

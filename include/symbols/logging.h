@@ -1,9 +1,9 @@
 // Logging library: The project uses the "bora::logging" library for logging functionality.
 // This library provides functions for creating message boxes and printing messages to the console.
+#pragma once
 
 #include <macros.h>
-#include <cstdarg>
-#include <cstdio>  
+#include <stl/arguments.h>
 
 /// @brief This will be your friend for logging and debugging.
 /// It provides functions to create message boxes and print messages to the console.
