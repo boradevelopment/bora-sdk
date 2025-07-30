@@ -1,3 +1,11 @@
-.vscode
+# Unneeded things
 .vs
-complier 
+builds
+.vscode
+.idea
+build
+libs
+# Built Bora Formats
+*.brdep
+*.bcdep
+*.bapp
