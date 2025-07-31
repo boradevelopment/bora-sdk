@@ -1,4 +1,4 @@
-# BORA Software Development Kit [Not Alpha Yet]
+# BORA Software Development Kit 0.1.4
 ## The official implementation of proper BORA-WASM code for the best performance
 
 Currently, this version of this SDK is barely pushing alpha. It is currently a test.
