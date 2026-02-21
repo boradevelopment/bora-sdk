@@ -14,7 +14,6 @@
 #include "commands/CmakeBuildCommand.h"
 
 int main(int argc, char** argv) {
-
     AppParam::registerParam("as");
     AppParam::registerParam("output", {"-o"});
     AppParam::registerParam("nobora", {"-nb"});
@@ -24,7 +23,7 @@ int main(int argc, char** argv) {
     AppParam::registerParam("build", {"-b", "-B"});
     AppParam::registerParam("cmake", {"cmake"});
     AppParam::registerParam("install", {"install"});
-
+    AppParam::registerParam("displayName", {"-dp"});
     AppParam::initialize(argc, argv);
 
 

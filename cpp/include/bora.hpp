@@ -23,7 +23,8 @@ namespace bora {
 #include "symbols/input.h"
 #endif
 #ifndef B_NOWINDOW
-#include "symbols/window.h"
+#include "symbols/userWindow.h"
+#include "symbols/graphics/graphics.h"
 #endif
 #ifndef B_NOLOGGING
 #include "symbols/logging.h"

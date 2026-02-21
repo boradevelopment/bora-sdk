@@ -26,6 +26,45 @@ std::string Command::output() const {
     return outputStr;
 }
 
+int Command::getResult() const {
+    return resultCode;
+}
+
+void Command::kill() {
+#if WIN32
+    if (pi.hProcess) {  // pi is your PROCESS_INFORMATION member
+        // Forcefully terminate the process
+        TerminateProcess(pi.hProcess, 1); // 1 is the exit code
+
+        // Wait for the process to actually exit
+        WaitForSingleObject(pi.hProcess, INFINITE);
+
+        // Close handles
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+
+        pi.hProcess = nullptr;
+        pi.hThread = nullptr;
+    }
+#elif defined(__linux__) || defined(__APPLE__)
+    if (pid > 0) {
+        // Send SIGTERM first (polite termination)
+        ::kill(pid, SIGTERM);
+
+        // Wait a short time for process to exit
+        int status;
+        pid_t result = waitpid(childPid, &status, WNOHANG);
+        if (result == 0) {
+            // Process still alive, force kill with SIGKILL
+            ::kill(pid, SIGKILL);
+            waitpid(pid, &status, 0); // wait for it to exit
+        }
+
+        pid = 0; // mark as no longer active
+    }
+#endif
+}
+
 int Command::execute(std::function<void(const std::string&)> onOutputLine) {
 #if defined(_WIN32)
     return executeWindows(onOutputLine);
@@ -62,7 +101,6 @@ int Command::executeWindows(std::function<void(const std::string&)>& onOutputLin
     SECURITY_ATTRIBUTES sa{ sizeof(SECURITY_ATTRIBUTES), nullptr, TRUE };
     if (!CreatePipe(&hRead, &hWrite, &sa, 0)) return -1;
 
-    PROCESS_INFORMATION pi{};
     STARTUPINFOA si{};
     si.cb = sizeof(STARTUPINFOA);
     si.hStdOutput = hWrite;
@@ -99,20 +137,44 @@ int Command::executeWindows(std::function<void(const std::string&)>& onOutputLin
     std::array<char, 128> buffer;
     DWORD bytesRead;
     while (ReadFile(hRead, buffer.data(), buffer.size(), &bytesRead, nullptr)) {
+        if (bytesRead == 0) break;
+
         for (DWORD i = 0; i < bytesRead; ++i) {
             char c = buffer[i];
+
+            if (!onOutputLine) {
+                // Direct passthrough to stdout if no callback
+                putchar(c);
+                fflush(stdout);
+                continue;
+            }
+
+            // Handle newlines
             if (c == '\n') {
-                if (onOutputLine) onOutputLine(line);
+                onOutputLine(line);
                 outputStr += line + "\n";
                 line.clear();
-            } else if (c != '\r') {
+            }
+            // Handle carriage return (progress updates like curl)
+            else if (c == '\r') {
+                // Treat it as a complete update (overwrite same line)
+                if (!line.empty()) {
+                    onOutputLine(line);
+                    outputStr += line + "\n";
+                    line.clear();
+                }
+            }
+            else {
                 line += c;
             }
         }
-    }
-    if (!line.empty()) {
-        if (onOutputLine) onOutputLine(line);
-        outputStr += line + "\n";
+
+        // Flush any partial data (for real-time feedback)
+        if (!line.empty()) {
+            onOutputLine(line);
+            outputStr += line;
+            line.clear();
+        }
     }
 
     WaitForSingleObject(pi.hProcess, INFINITE);
@@ -131,7 +193,7 @@ int Command::executePosix(std::function<void(const std::string&)>& onOutputLine)
     int pipefd[2];
     if (pipe(pipefd) == -1) return -1;
 
-    pid_t pid = fork();
+    pid = fork();
     if (pid == -1) return -1;
 
     if (pid == 0) {

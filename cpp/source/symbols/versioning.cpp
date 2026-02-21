@@ -8,15 +8,19 @@ namespace bora::versioning {
     }; 
 
     // The full version as a C Style String
-    constexpr const char* version = "0.0.1";
+    constexpr const char* version = BSDK_VERSION;
     // The major version integer for overhaul updates
-    constexpr int versionMajor = 0;
+    constexpr int versionMajor = BSDK_VERSION_MAJOR;
     // The minor version integer for big updates but not enough to change systems
-    constexpr int versionMinor = 0;
+    constexpr int versionMinor = BSDK_VERSION_MINOR;
     // The patch version integer for small fixes and updates
-    constexpr int versionPatch = 1;
+    constexpr int versionPatch = BSDK_VERSION_PATCH;
     // Mode that the SDK was built in
+    #ifdef DEBUG
+    constexpr Mode mode = Mode::Debug;
+    #else
     constexpr Mode mode = Mode::Production;
+    #endif
 
     const char* modeToString() {
     switch (mode) {

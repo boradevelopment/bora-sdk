@@ -14,12 +14,23 @@ CommandResult InstallCommand::execute() {
         return CommandResult::Failure;
     }
 
-    std::filesystem::path depsFolder(exePath.string() + "/.deps");
+    std::filesystem::path depsFolder(exePath.parent_path().string() + pathSlash +".deps");
 
-    if(exists(depsFolder)){ // Data exists! Reinstalling
-        printf("Reinstalling BORAC dependencies so removing .deps\n");
-        remove_all(depsFolder);
-    } else printf("Installing BORAC dependencies!\n");
+    if(exists(depsFolder)){
+        std::cout << "The dependencies folder already exists. Do you want to delete it and continue or leave it as is? (y/n): ";
+        char response = 'n';
+        std::cin >> response;
+
+        if (response == 'y' || response == 'Y') {
+            std::filesystem::remove_all(depsFolder);
+            std::cout << "Folder deleted. Continuing...\n";
+        } else {
+            std::cout << "Leaving folder as is. Exiting.\n";
+            return CommandResult::DependencyMissing;
+        }
+    }
+
+    printf("Installing BORAC dependencies!\n");
 
     std::filesystem::create_directories(depsFolder);
 
@@ -27,30 +38,18 @@ CommandResult InstallCommand::execute() {
        SetFileAttributesA(depsFolder.string().c_str(), FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_DIRECTORY);
 #endif
 
-    printf("Installing emscripten dependency\n");
-
-    // PLATFORM COMPATABILITY
-
     Command cloneGitEMCC(cmdApp, {{cmdCode, "git clone https://github.com/emscripten-core/emsdk.git "+depsFolder.string() + "/emsdk"}});
 
-    printf("Installing emscripten git repository\n");
+    if(cloneGitEMCC.execute() != 0){
+        printf("I could not install emscripten repo. Check the logs\n");
+        return CommandResult::DependencyMissing;
+    }
 
-   if(cloneGitEMCC.execute([](auto output){
-       printf("[Git Info]: %s\n", output.c_str());
-   }) != 0){
-       printf("I could not install emscripten repo. Check the logs\n");
-       return CommandResult::DependencyMissing;
-   }
+    if(Command(cmdApp, {{cmdCode, depsFolder.string() + "/emsdk" + R"(/emsdk install latest)" }}).execute() != 0){
+        printf("Emscripten failed to install it's tools, check logs\n");
+        return CommandResult::DependencyMissing;
+    }
 
-   printf("Installing emscripten tools\n");
-   if(Command(cmdApp, {{cmdCode, depsFolder.string() + "/emsdk" + R"(/emsdk install latest)" }}).execute([](auto output){
-       printf("[Tool Info]: %s\n", output.c_str());
-   }) != 0){
-       printf("Emscripten failed to install it's tools, check logs\n");
-       return CommandResult::DependencyMissing;
-   }
-
-    printf("Activating emscripten tools");
     if(Command(cmdApp, {{cmdCode, depsFolder.string() + "/emsdk" + R"(/emsdk activate latest)"}}).execute() != 0){
         printf("Emscripten failed to activate it's tools, check logs\n");
         return CommandResult::DependencyMissing;

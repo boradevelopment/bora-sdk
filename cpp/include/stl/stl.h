@@ -4,7 +4,7 @@
 // This is your Standard Template Library (STL) namespace. Use this instead of C++ std for better optimization towards BORA.
 namespace bora::stl {} 
 
-#ifdef BORA_STL_USE_NAMESPACE // If you don't want to use bora::stl::bka, you can define BORA_STL_USE_NAMESPACE
+#ifdef BORA_STL_USE_NAMESPACE // If you don't want to design your code bora::stl::bla, you can define BORA_STL_USE_NAMESPACE
     using namespace bora::stl;
 #endif
 
@@ -14,23 +14,5 @@ namespace bora::stl {}
 #endif
 #ifndef B_STL_NOSTRING
 #include "string.h"
-#endif
-#ifndef B_STL_NOSHARED_POINTER
-#include "shared_pointer.h"
-#endif
-#ifndef B_STL_NOUNIQUE_POINTER
-#include "unique_pointer.h"
-#endif
-#ifndef B_STL_NOMOVE
-#include "move.h"  
-#endif
-#ifndef B_STL_NOATOMIC
-#include "atomic.h"
-#endif
-#ifndef B_STL_NOMAP
-#include "map.h"
-#endif
-#ifndef B_STL_NOVECTOR
-#include "vector.h"
 #endif
 #pragma endregion

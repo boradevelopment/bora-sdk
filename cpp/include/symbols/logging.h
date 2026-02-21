@@ -1,7 +1,6 @@
 // Logging library: The project uses the "bora::logging" library for logging functionality.
 // This library provides functions for creating message boxes and printing messages to the console.
 #pragma once
-
 #include <macros>
 
 /// @brief This will be your friend for logging and debugging.
@@ -27,11 +26,9 @@ struct messageBoxConfig {
 };
 
 IMPORT_ATTR("bora::logging", "msgbox")
-/// @brief Creates a GUI Window [Global]
-/// @param title A title [as pointer]
-/// @param width A int width [as pointer]
-/// @param height A int height
-/// @return BORA Window Object
+/// @brief Creates a native message box
+/// @param config message box configuration object
+/// @return result of message box
 extFunc int messageBox(messageBoxConfig config);
 
 IMPORT_ATTR("bora::logging", "cout")

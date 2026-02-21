@@ -1,6 +1,8 @@
 #include "symbols/logging.h"
-#include <stl/arguments.h>
+#include <cstdarg>
+#include <cstdio>
 
+// todo: implement my own argument system
 namespace bora::logging {
     void errorf(const char* format, ...) {
     va_list args;

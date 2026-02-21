@@ -20,12 +20,13 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include "../tools/AppParam.h"
+#include "tools/AppParam.h"
 #include "../tools/Command.h"
+#include "filesystem"
 #if WIN32
 #include <Windows.h>
 #endif
-#include "../tools/Env.h"
+#include "tools/Env.h"
 #if __APPLE__
 #include <mach-o/dyld.h>
 #endif
@@ -47,12 +48,15 @@ enum class CommandResult {
 #if defined(_WIN32)
 static constexpr const char* cmdApp = "cmd.exe";
 static constexpr const char* cmdCode = "/C";
+static constexpr const char* pathSlash = "\\";
 #elif defined(__linux__) || defined(__APPLE__)
 static constexpr const char* cmdApp = "sh";
 static constexpr const char* cmdCode = "-c";
+static constexpr const char* pathSlash = "/";
 #else
 static constexpr const char* cmdApp = "";
 static constexpr const char* cmdCode = "";
+static constexpr const char* pathSlash = "";
 #endif
 
 static CommandResult OsDependentPathGet(std::filesystem::path& exePath);

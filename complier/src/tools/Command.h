@@ -22,10 +22,11 @@
 
 class Command {
 public:
-    Command(const std::string& exe, const std::map<std::string, std::string>& arguments = {{"", ""}});
+    explicit Command(const std::string& exe, const std::map<std::string, std::string>& arguments = {{"", ""}});
     int execute(std::function<void(const std::string&)> onOutputLine = nullptr);
-    std::string output() const;
-
+    [[nodiscard]] std::string output() const;
+    [[nodiscard]] int getResult() const;
+    void kill();
 private:
     std::string executable;
     std::map<std::string, std::string> args;
@@ -33,11 +34,12 @@ private:
     int resultCode;
 
     std::vector<std::string> buildArgsList();
-
 #if defined(_WIN32)
     int executeWindows(std::function<void(const std::string&)>& onOutputLine);
+    PROCESS_INFORMATION pi{};
 #else
     int executePosix(std::function<void(const std::string&)>& onOutputLine);
+    pid_t pid;
 #endif
 };
 

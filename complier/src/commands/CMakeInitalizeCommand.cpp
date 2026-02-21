@@ -2,6 +2,7 @@
 // Check LICENSE.md for more information regarding the BORA license.
 
 #include <filesystem>
+#include <Utilities.h>
 #include "CMakeInitalizeCommand.h"
 #if __linux__
 #include <unistd.h>
@@ -27,26 +28,25 @@ CommandResult CMakeInitalizeCommand::execute() {
 
     if(!exists(emBaseFolder)) return CommandResult::DependencyMissing;
 
-    auto projectDirectory = AppParam::getValue<std::string>("directory");
+    auto projectDirectory = AppParam::get("directory");
     if(projectDirectory.empty()){
-        projectDirectory = std::filesystem::current_path().string();
+        projectDirectory = std::filesystem::current_path().wstring();
     }
-    auto buildDirectory = AppParam::getValue<std::string>("build");
+    auto buildDirectory = AppParam::get("build");
     if(buildDirectory.empty()){
-        buildDirectory = projectDirectory + R"(\build)";
+        buildDirectory = projectDirectory + LR"(\build)";
     }
 
     std::filesystem::create_directories(buildDirectory);
-
 
 
     auto isDebug = AppParam::has("debug");
 
     // Build input file
 
-    auto bwasmPath = std::filesystem::path(buildDirectory +"/bwasm.wasm");
-    std::string compilerFlags = "-sMEMORY64=1 -Oz -sSTANDALONE_WASM -I\"" + sdkPath + "/include\" -o"+bwasmPath.string();
-    std::string linkerFlags = "-Oz -Wl,--whole-archive \"" + sdkPath + "/libs/libbora.bcdep\" -Wl,--no-whole-archive -o"+bwasmPath.string();;
+    auto bwasmPath = std::filesystem::path(buildDirectory +L"/bwasm.wasm");
+    std::string compilerFlags = "-sMEMORY64=1 -Oz -I\"" + sdkPath + "/include\" -o"+bwasmPath.string();
+        std::string linkerFlags = "-Oz -Wl,--whole-archive \"" + sdkPath + "/libs/libbora.bcdep\" -Wl,--no-whole-archive -o"+bwasmPath.string();;
 
     if(isDebug){
         compilerFlags.append(" -g3");
@@ -54,12 +54,12 @@ CommandResult CMakeInitalizeCommand::execute() {
 
 
 
-    std::string compPath = emBaseFolder.string() + "emcmake cmake -B \"" + buildDirectory + "\" \"" + projectDirectory + "\"";
+    std::string compPath = emBaseFolder.string() + "emcmake cmake -B \"" + wstringToUtf8(buildDirectory) + "\" \"" + wstringToUtf8(projectDirectory) + "\"";
     compPath += " -DCMAKE_CXX_FLAGS=\"" + compilerFlags + "\"";
     compPath += " -DCMAKE_EXE_LINKER_FLAGS=\"" + linkerFlags + "\"";
     compPath += " -DCMAKE_EXECUTABLE_SUFFIX_CXX=\".wasm\"";
 
-    int makeResult = Command(cmdApp, {{cmdApp, compPath}}).execute([](auto output){
+    int makeResult = Command(cmdApp, {{cmdCode, compPath}}).execute([](auto output){
         printf("%s\n", output.c_str());
     });
 

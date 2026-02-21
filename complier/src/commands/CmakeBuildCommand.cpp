@@ -27,18 +27,18 @@ CommandResult CmakeBuildCommand::execute() {
 
     if(!exists(emBaseFolder)) return CommandResult::DependencyMissing;
 
-    auto buildDirectory = AppParam::getValue<std::string>("build");
-    if(buildDirectory.empty()){
-        buildDirectory = std::filesystem::current_path().string() + R"(\build)";
+    auto buildDirectory = AppParam::get("build");
+    if(buildDirectory.empty() || buildDirectory == L"true"){
+        buildDirectory = std::filesystem::current_path().wstring() + LR"(/build)";
     }
 
 
-    auto logo = AppParam::getValue<std::string>("logo");
+    auto logo = AppParam::get("logo");
     if(logo.empty()){
-        logo = R"(C:\Projects\bora\global\assets\logo\borat.png)";
+        logo = LR"(C:\bora\global\assets\logo\borat.png)";
     }
 
-    std::string compPath = emBaseFolder.string() + "emmake make -C \"" + buildDirectory + "\" ";
+    std::string compPath = emBaseFolder.string() + "emmake make -C \"" + wstringToUtf8(buildDirectory) + "\" ";
 
 
     int makeResult = Command(cmdApp, {{cmdCode, compPath}}).execute([](auto output){
@@ -49,14 +49,14 @@ CommandResult CmakeBuildCommand::execute() {
         return CommandResult::Failure;
     }
 
-    auto asParam = AppParam::getValue<std::string>("as");
-    if(asParam.empty()) asParam = "app";
+    auto asParam = AppParam::get("as");
+    if(asParam.empty()) asParam = L"app";
 
     std::vector<WasmFile> wasmFiles;
 
     bool isStatic = false;
     bool isRTDep = false;
-    if(asParam == "app") {
+    if(asParam == L"app") {
         // I'll have to scan the folder for .wasm
 
         for (auto &entry: std::filesystem::recursive_directory_iterator(buildDirectory)) {
@@ -85,7 +85,7 @@ CommandResult CmakeBuildCommand::execute() {
         }
 
 
-    } else if(asParam == "rdep"){
+    } else if(asParam == L"rdep"){
         isRTDep = true;
         for (auto &entry: std::filesystem::recursive_directory_iterator(buildDirectory)) {
             if (entry.is_regular_file() && entry.path().extension() == ".wasm") {
@@ -112,15 +112,16 @@ CommandResult CmakeBuildCommand::execute() {
         outputPath.replace_extension(".bapp");
 
         {
-            V2Archive archive(outputPath.filename().string(), outputPath.string(),
-                              "This is a BORA Application! You shouldn't touch anything unless you know what you're doing...");
-            archive.header.customVariables["id"] = "BORA";
-            archive.header.customVariables["entry"] = output.filename().string();
-            archive.addFile(output.string());
-            archive.addFileAndGet(logo, "logo");
+            V2Archive archive(outputPath.filename().wstring(), outputPath.string(),
+                              L"This is a BORA Application! You shouldn't touch anything unless you know what you're doing...");
+            archive.header.customVariables[L"id"] = "BORA";
+            archive.header.customVariables[L"entry"] = output.filename().wstring();
+            archive.addFileAndGet(output.wstring(), output.filename().wstring());
+            archive.addFileAndGet(logo, L"logo");
         }
 
-        std::filesystem::remove(output);
+
+        //std::filesystem::remove(output);
 
         printf("Your BORA application is complete! You can find it at %s\n",
                std::filesystem::absolute(outputPath).string().c_str());
@@ -146,11 +147,11 @@ CommandResult CmakeBuildCommand::execute() {
         outputPath.replace_extension(".brdep");
 
         {
-            V2Archive archive(outputPath.filename().string(), outputPath.string(),
-                              "This is a BORA Application! You shouldn't touch anything unless you know what you're doing...");
-            archive.header.customVariables["id"] = "BORADEP";
-            archive.header.customVariables["depname"] = outputPath.stem().string();
-            archive.addFile(output.string());
+            V2Archive archive(outputPath.filename().wstring(), outputPath.string(),
+                              L"This is a BORA Application! You shouldn't touch anything unless you know what you're doing...");
+            archive.header.customVariables[L"id"] = "BORADEP";
+            archive.header.customVariables[L"depname"] = outputPath.stem().wstring();
+            archive.addFile(output.wstring());
         }
 
         std::filesystem::remove(output);

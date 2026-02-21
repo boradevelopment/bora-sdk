@@ -3,17 +3,18 @@ project(BORAC C CXX ASM)
 set(CMAKE_CXX_STANDARD 20)
 
 file(GLOB_RECURSE BORA_SOURCES_CONTRIB contribs/*.cpp contribs/*.h contribs/*.hpp ../../global/cpp/contribs/*.h ../../global/cpp/contribs/*.cpp ../../global/cpp/contribs/*.hpp)
+file(GLOB_RECURSE BORA_SOURCES src/*.cpp src/*.h src/*.hpp)
+file(GLOB_RECURSE BORA_SOURCES_3RDPARTY 3rdparty/**/*.cpp 3rdparty/**/*.h 3rdparty/**/*.hpp ../../3rdparty/**/*.cpp ../../3rdparty/**/*.h ../../3rdparty/**/*.hpp)
 
 include_directories(
         3rdparty
         ../../global/cpp/contribs/TAZA/code
        ../../global/cpp/contribs
+        ../../global/cpp/3rdparty
 )
 
 # Collect source files
-file(GLOB_RECURSE BORA_SOURCES src/*.cpp src/*.h src/*.hpp)
 
-file(GLOB_RECURSE BORA_SOURCES_3RDPARTY 3rdparty/**/*.cpp 3rdparty/**/*.h 3rdparty/**/*.hpp)
 
 # Add executable
 add_executable(BORAC ${BORA_SOURCES}
@@ -27,6 +28,7 @@ target_compile_options(BORAC PRIVATE
 )
 
 target_compile_definitions(BORAC PRIVATE
+        NOMINMAX
         TAZABASEDIR=\"${CMAKE_SOURCE_DIR}../../global/cpp/contribs/TAZA/code\"
 )
 

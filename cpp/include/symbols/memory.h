@@ -32,4 +32,10 @@ void deallocate(u64 pointer);
 /// @param size The number of bytes to copy.
 /// @return The destination pointer.
 void* copy(void* dest, const void* src, u64 size);
+/// @brief Sets the memory to be the value you want until you reach the length
+/// @param ptr the memory
+/// @param value the data you want to set
+/// @param length how much data will have be set before hitting the length
+/// @return the same ptr
+void* set(void* ptr, int value, u64 length);
 }
