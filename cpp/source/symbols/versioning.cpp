@@ -1,4 +1,5 @@
 #include "symbols/versioning.h"
+#include "GlobalVersion.h"
 
 namespace bora::versioning {
     namespace sdk {
@@ -8,13 +9,13 @@ namespace bora::versioning {
     }; 
 
     // The full version as a C Style String
-    constexpr const char* version = BSDK_VERSION;
+    constexpr const char* version = BORA_VERSION;
     // The major version integer for overhaul updates
-    constexpr int versionMajor = BSDK_VERSION_MAJOR;
+    constexpr int versionMajor = BORA_VERSION_MAJOR;
     // The minor version integer for big updates but not enough to change systems
-    constexpr int versionMinor = BSDK_VERSION_MINOR;
+    constexpr int versionMinor = BORA_VERSION_MINOR;
     // The patch version integer for small fixes and updates
-    constexpr int versionPatch = BSDK_VERSION_PATCH;
+    constexpr int versionPatch = BORA_VERSION_PATCH;
     // Mode that the SDK was built in
     #ifdef DEBUG
     constexpr Mode mode = Mode::Debug;

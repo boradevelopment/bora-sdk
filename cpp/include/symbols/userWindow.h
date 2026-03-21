@@ -37,24 +37,18 @@ struct bnWindowTitlebarConfig {
     bool enabled = true;
 };
 
+typedef void (*UpdateProc)(const char* wndID, void* userObject, unsigned int msg, u64 wParam, intptr_t lParam);
+
 struct WindowConfig {
-    bora::stl::string id = L"Window";
-    bora::stl::string title = L"";
-    int frameLimit = -1;
-    u8* logo = nullptr;
-    float clearColor[4] = { 255, 255, 255, 1.0f };
-    float titleBarColor[4] = { 0, 0, 0 };
-    int aliasLevelCount = 8;
-    bool enableAntiAliasing = true;
-    bnWindowTitlebarConfig* titleBarConfig = nullptr;
-    void (*update)(bnWindow*);
+    const char* id = "Window";
+    UpdateProc update;
 };
 
-}
+}   
 
 extFunc {
 IMPORT_ATTR("bora::window", "create")
-u64 createWindow(bora::WindowConfig config, u64* graphicsOffset);
+u64 createWindow(const char* id, void* update);
 IMPORT_ATTR("bora::window", "run")
 void runWindow(u64 window);
 IMPORT_ATTR("bora::window", "close")
@@ -65,6 +59,8 @@ namespace bora {
 
 // Creates a Bora Native Window
 class bnUserWindow {
+private:
+    inline static std::unordered_map<const char*, bnUserWindow*> guestWindowRegistry;
 public:
     bnUserWindow(WindowConfig config);
     ~bnUserWindow();
@@ -72,6 +68,7 @@ public:
     void close();
     void run();
     bnGraphics* getGraphics();
+    static bnUserWindow* getWindowObjectFromHandle(const char* wndID);
 public:
     WindowConfig configuration; 
 private:

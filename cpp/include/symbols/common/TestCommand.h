@@ -1,45 +1,40 @@
+#pragma once
 #include "symbols/common/CommandList.h"
-
-// todo: synchronize global headers in SDK C++
-#pragma pack(push, 1)
-struct TestCommandData
-{
-    int value;
-};
-#pragma pack(pop)
-
+#include "nCommon/CommandListCategories.h"
+#include "symbols/nMemory.h"
 struct TestCommandSDK : public ISDKCommand
 {
     TestCommandData data;
-
+    
     TestCommandSDK(int value)
     {
         data.value = value;
+        data.text = "This is from the BORA SDK";
+        // data.ints[0] = value;
+        // data.ints[1] = value+1;
     }
 
     static constexpr const char* RuntimeName() { return "TestCommand"; }
-    static constexpr const char* RuntimeCategory() { return "bnTests"; }
+    static constexpr const char* RuntimeCategory() { return CommandCategories::NativeTesting; }
 };
 
 class TestCommandList : public CommandList {
 public:
-    TestCommandList() : CommandList("Test") {
-
+    TestCommandList() : CommandList(CommandCategories::NativeTesting, "Test") {
+    //    mBuffer.data.reserve(4999 * (sizeof(SerializedCommandHeader) + sizeof(TestCommandData)));
     }
 
-    void TestTheCommand(int value){
-        auto sdkCommand = TestCommandSDK(value);
-        mBuffer.Push(sdkCommand);
+    void TestTheCommand(TestCommandSDK& value){
+        mBuffer.Push(value);
         Commit();
     }
 
-    void JustPush(int value){
-        auto sdkCommand = TestCommandSDK(value);
-        mBuffer.Push(sdkCommand);
+    void JustPush(TestCommandSDK& value){
+        mBuffer.Push(value);
     }
 
-    std::vector<u8>* GetData(){
-        return &mBuffer.data;
+    CommandBufferData GetData(){
+        return mBuffer.data;
     }
 
     void Clear(){
