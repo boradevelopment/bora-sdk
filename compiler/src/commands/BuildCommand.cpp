@@ -17,11 +17,7 @@ CommandResult BuildCommand::execute() {
     if(OsDependentPathGet(exePath) != CommandResult::Success){
         return CommandResult::Failure;
     }
-#if __APPLE__
-    std::filesystem::path emBaseFolder(exePath.string()+R"(/.deps/emsdk/upstream/emscripten/)");
-#else
     std::filesystem::path emBaseFolder(exePath.parent_path().string()+R"(/.deps/emsdk/upstream/emscripten/)");
-#endif
     auto sdkPath = Environment::getEnvVar("BORA_SDK_PATH");
 
     if(sdkPath.empty()){
@@ -36,7 +32,7 @@ CommandResult BuildCommand::execute() {
     auto output = AppParam::get("output");
     auto includeDirectories = AppParam::getArray("include");
     auto libBoraDevelopment = AppParam::has("useRootSource");
-    bool useProductionBin = std::filesystem::exists(sdkPath+"/cpp/bin");
+    bool useProductionBin = std::filesystem::exists(sdkPath+"/bin");
     if (!useProductionBin) {
         printf("BIN not found! This is irregular to happen for a end user so assuming this is a developer setup!\n");
     }
@@ -47,7 +43,7 @@ CommandResult BuildCommand::execute() {
     auto devRootPath = Environment::getEnvVar("BORA_DEV_ROOT_PATH");
     if(!devRootPath.empty() && !useProductionBin) {
         printf("BORA DEVELOPER SOURCE DETECTED - Including global contributions folder for development purposes! Note that by default, contributions are not  included post production! Please write // BORA_INCLUDED_IN_SDK on the top of the contributing header in order for it to be included in production builds.\n");
-        includeDirectories.push_back(std::filesystem::path(devRootPath) / "global/cpp/contribs");
+        includeDirectories.push_back((std::filesystem::path(devRootPath) / L"global/cpp/contribs").wstring());
     } else if (devRootPath.empty() && !useProductionBin) {
         printf("BORA DEVELOPER SOURCE NOT FOUND - Please run setup.bat at the root of your source directory (if you don't know what this means, remove -useRootSource)");
         return CommandResult::DependencyMissing;
@@ -131,10 +127,10 @@ CommandResult BuildCommand::execute() {
 
     } else if(asParam == L"cdep"){
         std::filesystem::path outputPath(output);
-        auto bwasmPath = std::filesystem::path(outputPath.parent_path().string() +"\\bwasm.o");
+        auto bwasmPath = std::filesystem::path(outputPath.parent_path().string() +"/bwasm.o");
         std::string compPath(emBaseFolder.string() + "em++ -s MEMORY64=1 ");
         std::string args("-sSTANDALONE_WASM=1 -c -I");
-        args.append("\""+sdkPath + "\\include\" ");
+        args.append("\""+sdkPath + "/include\" ");
         for (const auto& path : includeDirectories) {
             args.append("-I\"");
             args.append(wstringToUtf8(path));

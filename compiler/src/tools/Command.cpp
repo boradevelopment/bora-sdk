@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <memory>
 #include <array>
+#include <signal.h>
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -53,7 +54,7 @@ void Command::kill() {
 
         // Wait a short time for process to exit
         int status;
-        pid_t result = waitpid(childPid, &status, WNOHANG);
+        pid_t result = waitpid(pid, &status, WNOHANG);
         if (result == 0) {
             // Process still alive, force kill with SIGKILL
             ::kill(pid, SIGKILL);

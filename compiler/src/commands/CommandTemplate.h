@@ -82,8 +82,6 @@ CommandResult OsDependentPathGet(std::filesystem::path &exePath) {
         return CommandResult::Failure;
     }
     exePath = std::filesystem::canonical(buffer);
-
-    exePath = exePath.parent_path();
 #endif
 
     return CommandResult::Success;

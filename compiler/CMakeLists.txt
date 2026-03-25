@@ -14,8 +14,6 @@ include_directories(
 )
 
 # Collect source files
-
-
 # Add executable
 add_executable(BORAC ${BORA_SOURCES}
         ${BORA_SOURCES_CONTRIB}
@@ -44,7 +42,6 @@ elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
             -lbrotlienc -lbrotlidec -lbrotlicommon
     )
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
-
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -gdwarf-4")
     set(CMAKE_OSX_ARCHITECTURES arm64)
 
