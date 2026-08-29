@@ -3,6 +3,8 @@
 
 #include "InstallCommand.h"
 #include <filesystem>
+#include "tools/CPUInfo.h"
+#include "tools/OSInfo.h"
 #if __linux__
 #include <unistd.h>
 #include <climits>
@@ -34,9 +36,10 @@ CommandResult InstallCommand::execute() {
 
     std::filesystem::create_directories(depsFolder);
 
-#if WIN32
+#ifdef _WIN64
        SetFileAttributesA(depsFolder.string().c_str(), FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_DIRECTORY);
 #endif
+
 
     Command cloneGitEMCC(cmdApp, {{cmdCode, "git clone https://github.com/emscripten-core/emsdk.git "+depsFolder.string() + "/emsdk"}});
 

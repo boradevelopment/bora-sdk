@@ -59,8 +59,6 @@ namespace bora {
 
 // Creates a Bora Native Window
 class bnUserWindow {
-private:
-    inline static std::unordered_map<const char*, bnUserWindow*> guestWindowRegistry;
 public:
     bnUserWindow(WindowConfig config);
     ~bnUserWindow();

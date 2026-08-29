@@ -7,25 +7,29 @@
 #include "TAZA.h"
 #include "tools/Command.h"
 #include "tools/AppParam.h"
-
 #include "commands/BuildCommand.h"
 #include "commands/BuildLibBoraCommand.h"
 #include "commands/InstallCommand.h"
 #include "commands/CMakeInitalizeCommand.h"
 #include "commands/CmakeBuildCommand.h"
 
-int main(int argc, char** argv) {
+REGISTER_PARAM("as")
+REGISTER_PARAM("output")
+
+int main(int argc, char** argv) {   
     AppParam::registerParam("as");
     AppParam::registerParam("output", {"-o"});
     AppParam::registerParam("nobora", {"-nb"});
     AppParam::registerParam("logo", {"-lg"});
     AppParam::registerParam("debug", {"-d"});
     AppParam::registerParam("directory", {"-dir"});
-    AppParam::registerParam("build", {"-b", "-B"});
+    AppParam::registerParam("build", {"-b", "-B"}
+        );
     AppParam::registerParam("cmake", {"cmake"});
     AppParam::registerParam("install", {"install"});
     AppParam::registerParam("displayName", {"-dp"});
     AppParam::registerParam("buildbora", {"-bb"});
+    AppParam::registerParam("buildsyslib", {"-bsl"});
     AppParam::registerParam("include", {"-i", "-I"});
     AppParam::registerParam("useRootSource", {"-uRS"});
     AppParam::initialize(argc, argv);

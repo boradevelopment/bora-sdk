@@ -1,6 +1,5 @@
 // Apart of the BORA Source which uses the TAOSU License
 // Check LICENSE.md for more information regarding the BORA license.
-
 #include "BuildCommand.h"
 #include "V2Archive.h"
 #include <filesystem>
@@ -11,6 +10,11 @@
 #include <unistd.h>
 #include <climits>
 #endif
+
+REGISTER_PARAM("id")
+REGISTER_PARAM_AD("define", {"-D"}, "Preprocessor macro definitions");
+REGISTER_PARAM_AD("exportall", {"-ea"}, "Preprocessor macro definitions");
+REGISTER_PARAM_AD("mainmodule", {"-mm"}, "Preprocessor macro definitions");
 
 CommandResult BuildCommand::execute() {
     std::filesystem::path exePath;
@@ -30,6 +34,7 @@ CommandResult BuildCommand::execute() {
     if(asParam.empty()) asParam = L"app";
     auto displayName = AppParam::get("displayName");
     auto output = AppParam::get("output");
+    auto binaryID = AppParam::get("id");
     auto includeDirectories = AppParam::getArray("include");
     auto libBoraDevelopment = AppParam::has("useRootSource");
     bool useProductionBin = std::filesystem::exists(sdkPath+"/bin");
@@ -65,34 +70,61 @@ CommandResult BuildCommand::execute() {
     }
 
     auto isDebug = AppParam::has("debug");
-
     auto inputFile = AppParam::get("");
     if(inputFile.empty()) return CommandResult::InvalidArguments;
 
+    if(asParam == L"app" || asParam == L"rdep"){
+        bool isApp = asParam == L"app";
+        std::filesystem::path outputPath;
+        if(isApp) {
+           outputPath = std::filesystem::path(output+L".bapp");
+        } else {
+            outputPath = std::filesystem::path(output+L".brdep");
+        }
+        std::filesystem::path bwasmPath = std::filesystem::path(outputPath.filename().stem().string()+".wasm");
 
-    if(asParam == L"app"){
-
-        std::filesystem::path outputPath(output+L".bapp");
-
-        auto bwasmPath = std::filesystem::path(outputPath.filename().stem().string()+".wasm");
-        std::string compPath(emBaseFolder.string() + "em++ -s MEMORY64=1");
-        std::string args(" -s STANDALONE_WASM -I");
-        args.append("\""+sdkPath + "/include\" -I \""+sdkPath + "/bin/include\"");
+        if (binaryID.empty())
+        {
+            binaryID = outputPath.filename().stem().wstring();
+        }
+        std::string compPath(emBaseFolder.string() + "em++ -s ERROR_ON_UNDEFINED_SYMBOLS=0 -s MEMORY64=1 ");
+        std::string args("");
+         if(!AppParam::has("nobora")) args.append("-I \""+sdkPath + "/include\" -I \""+sdkPath + "/bin/include\"");
         for (const auto& path : includeDirectories) {
             args.append(" -I\"");
             args.append(wstringToUtf8(path));
             args.append("\" ");
         }
-        args.append(" -o " + bwasmPath.string());
+        args.append("  -o " + bwasmPath.string());
         args.append(" "+wstringToUtf8(inputFile));
-        args.append(" -Wl,--whole-archive \""+sdkPath + R"(/libs/libbora.bcdep" -Wl,--no-whole-archive)");
+        args.append(" -Wno-deprecated -Wdeprecated-declarations -Wl,--stack-first -s STACK_SIZE=1MB -Wl,--export=__wasm_apply_relocs -Wl,--export=__wasm_apply_global_relocs  -Wl,--export-memory -s STANDALONE_WASM -s RELOCATABLE=1 -fvisibility=hidden -fvisibility-inlines-hidden -s IMPORTED_MEMORY=1 -Wl,--import-memory -Wl,--gc-sections -s MAXIMUM_MEMORY=16gb -s ALLOW_MEMORY_GROWTH=1 ");
+            if(!AppParam::has("nobora")) args.append("  -Wl,--export=__call_dtors -Wl,--export=get_bora_sdk_version -Wl,--export=get_bora_sdk_version_major -Wl,--export=get_bora_sdk_version_minor -Wl,--export=get_bora_sdk_mode -Wl,--no-whole-archive \""+sdkPath + R"(/libs/libbora.bcdep")");
+
+        args.append(" -D__BORA__ID=\""+wstringToUtf8(binaryID)+"\"");
+        if (isApp)
+        {
+            args.append(" -D__BORA__APPLICATION");
+        } else
+        {
+            args.append(" --no-entry -D__BORA__SHARED");
+        }
+        if (AppParam::has("exportall"))
+        {
+            args.append(" -s EXPORT_ALL=1");
+        }
+
+        std::vector<std::wstring> rawDefs = AppParam::getValues("define");
+        for (const auto& definition : rawDefs)
+        {
+            args.append(" -D"+wstringToUtf8(definition));
+        }
 
         // Build input file
-        if(isDebug){
-            args.append(" -g3 -O0 -mno-reference-types -mno-sign-ext -s SAFE_HEAP=1 -s ASSERTIONS=1 -s ALLOW_MEMORY_GROWTH=1");
+        if(isDebug){ 
+            args.append(" -g3 -O0");
             compPath.append(args);
         } else {
-            args.append(" -Oz -mno-reference-types -mno-sign-ext -s ALLOW_MEMORY_GROWTH=1 -s SAFE_HEAP_LOG=1");
+            args.append(" -Oz");
             compPath.append(args);
         }
 
@@ -100,48 +132,61 @@ CommandResult BuildCommand::execute() {
             printf("%s\n", output.c_str());
         });
 
-
         if(bla != 0){
                 printf("Please fix the following errors ^^^\n");
                 return CommandResult::Failure;
         }
 
     {
-
-        V2Archive archive(outputPath.filename().wstring(), outputPath.string(), L"This is a BORA Application! You shouldn't touch anything unless you know what you're doing...");
-        archive.header.customVariables[L"id"] = "BORA";
+        V2Archive archive(outputPath.filename().wstring(), outputPath.string(), L"This is a BORA Binary File! You shouldn't touch anything unless you know what you're doing...");
+        if (isDebug) archive.nocompression = true;
+        archive.header.customVariables[L"id"] = binaryID;
         archive.header.customVariables[L"entry"] = bwasmPath.filename().stem().wstring();
-        archive.header.customVariables[L"displayName"] = displayName;
+        if (isApp) {
+            archive.header.customVariables[L"magic"] = "BORA";
+            archive.header.customVariables[L"type"] = "APP";
+            archive.header.customVariables[L"displayName"] = displayName;
+        } else {
+            archive.header.customVariables[L"magic"] = "BORA";
+            archive.header.customVariables[L"type"] = "DEP";
+        }
+
         archive.addFileAndGet(bwasmPath.wstring(), bwasmPath.filename().stem().wstring());
         archive.addFileAndGet(logo, L"logo");
-        archive.header.logV2Header();
-    }
 
-        V2Archive archive;
-        archive.output = outputPath.string();
-        archive.getArchive();
+        if (AppParam::has("logfile"))
+        { // todo: output path
+            archive.header.logV2Header();
+        }
 
-        exportArchive(archive);
+        }
 
-     printf("Your BORA application is complete! You can find it at %s\n", std::filesystem::absolute(outputPath).string().c_str());
-
+        // removals
+        // std::filesystem::remove(bwasmPath);
+        if (isApp) {
+            printf("Your BORA application is complete! You can find it at %s\n", std::filesystem::absolute(outputPath).string().c_str());
+        } else {
+            printf("Your BORA Runtime Dependency is complete! You can find it at %s\n", std::filesystem::absolute(outputPath).string().c_str());
+        }
     } else if(asParam == L"cdep"){
         std::filesystem::path outputPath(output);
         auto bwasmPath = std::filesystem::path(outputPath.parent_path().string() +"/bwasm.o");
         std::string compPath(emBaseFolder.string() + "em++ -s MEMORY64=1 ");
-        std::string args("-sSTANDALONE_WASM=1 -c -I");
+        std::string args(" -s RELOCATABLE=1  -Wno-deprecated -Wdeprecated-declarations -fPIC -c -I");
         args.append("\""+sdkPath + "/include\" ");
         for (const auto& path : includeDirectories) {
             args.append("-I\"");
             args.append(wstringToUtf8(path));
             args.append("\" ");
         }
-        args.append("-o" + bwasmPath.string());
+        args.append("-fvisibility=hidden -fvisibility-inlines-hidden -o" + bwasmPath.string());
         args.append(" "+wstringToUtf8(inputFile));
         if(!AppParam::has("nobora")) args.append(" \""+sdkPath + "\\libs\\libbora.bcdep");
 
+        args.append(" -D__BORA__STATIC");
+
         if(isDebug){
-            args.append("  -O0 -g4 -s ASSERTIONS=1");
+            args.append("  -O0 -g");
             compPath.append(args);
         } else {
             args.append(" -Oz");
@@ -157,63 +202,23 @@ CommandResult BuildCommand::execute() {
                 return CommandResult::Failure;
             }
 
+
+
             outputPath.replace_filename(L"lib"+outputPath.filename().generic_wstring()+L".bcdep");
             int buildArchive = Command(cmdApp, {{cmdCode, emBaseFolder.string() + "emar rcs " + outputPath.generic_string() + bwasmPath.string()}}).execute([](auto output){
                 printf("%s\n", output.c_str());
             });
-
-            std::filesystem::remove(bwasmPath);
 
             if(buildArchive != 0){
                 printf("Please fix the following errors ^^^\n");
                 return CommandResult::Failure;
             }
 
-             printf("Your BORA Compile Dependency is complete! You can find it in %s", outputPath.string().c_str());
+             std::filesystem::remove(bwasmPath);
 
-     } else if(asParam == L"rdep") { // Runtime Dependency
-        std::filesystem::path outputPath(output+L".brdep");
+            printf("Your BORA Compile Dependency is complete! You can find it in %s", outputPath.string().c_str());
 
-        auto bwasmPath = std::filesystem::path(outputPath.filename().stem().string()+".wasm");
-        // RT Dependents are similiar to bapp, there is no entry point though.
-        std::string compPath(emBaseFolder.string() + "em++ -s MEMORY64=1 ");
-        std::string args("-Oz -s STANDALONE_WASM --no-entry -I");
-        args.append("\""+sdkPath + "\\include\" ");
-        args.append("-o" + bwasmPath.string());
-        args.append(" "+wstringToUtf8(inputFile));
-        args.append(" -Wl,--whole-archive \\\"\"+sdkPath + R\"(\\libs\\libbora.bcdep\" -Wl,--no-whole-archive)\"");
-        compPath.append(args);
-
-        if(isDebug){
-            args.append(" -g3");
-            compPath.append(args);
-        } else {
-            compPath.append(args);
-        }
-
-            int bla = Command(cmdApp, {{cmdCode, compPath}}).execute([](auto output){
-                printf("%s\n", output.c_str());
-            });
-
-            if(bla != 0){
-                printf("Please fix the following errors ^^^\n");
-                return CommandResult::Failure;
-            }
-
-
-            {
-
-                V2Archive archive(outputPath.filename().wstring(), outputPath.string(), L"This is a BORA Runtime Dependency that BORA applications may require.");
-                archive.header.customVariables[L"id"] = "BORADEP";
-                archive.header.customVariables[L"depname"] = output;
-                archive.addFile(bwasmPath.wstring());
-            }
-
-          // std::filesystem::remove(bwasmPath);
-
-            printf("Your BORA Runtime Dependency is complete! You can find it at %s\n", std::filesystem::absolute(outputPath).string().c_str());
-
-    }
+     }
 
     return CommandResult::Success;
 }

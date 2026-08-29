@@ -5,13 +5,8 @@
 
  * FileName: InstallCommand.h
  * Title: Install Command
- * Author: Munashe Dirwayi
  * Purpose: The installation of Bora Compilier dependencies.
 
- * Compatibility: ?
-
- * Updates - ?
- * Known issues - ?
  */
 
 #ifndef BORAC_INSTALLCOMMAND_H

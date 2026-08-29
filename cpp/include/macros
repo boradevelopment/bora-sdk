@@ -1,13 +1,23 @@
 // This is NOT apart of the Bora SDK, but a macro header file for the Bora SDK.
 // It may not be recommanded to include this file directly, but rather include the Bora SDK header file (bora.h).
 #pragma once
-#ifdef __INTELLISENSE__
+#if defined(__INTELLISENSE__) || defined(__BORA__STATIC)
 #define intellisense
 #define IMPORT_ATTR(workspace, function) // C++ IntelliSense does not support Clang attributes for VSCODE [Do not worry, this is just for IntelliSense]
 #define EXPORT_ATTR(name)
+#define ON_CONSTRUCTION
+#define ON_DESTRUCTION
 #else
+#define ON_CONSTRUCTION __attribute__((constructor)) 
+#define ON_CONSTRUCTION_PRIORITY(priority) __attribute__((constructor(priority))) 
+#define ON_DESTRUCTION __attribute__((destructor)) 
+#define ON_DESTRUCTION_PRIORITY(priority) __attribute__((destructor(priority))) 
 #define IMPORT_ATTR(workspace, function) __attribute__((import_module(workspace), import_name(function)))
-#define EXPORT_ATTR(name) __attribute__((export_name(name))) __attribute__((used)) 
+#define STRINGIFY_IMPL(x) #x
+#define STRINGIFY(x) STRINGIFY_IMPL(x)
+#define EXPORT_ATTR(name) \
+    __attribute__((export_name(name))) \
+    __attribute__((used))
 #endif
 
 // Define a macro to shorten extern "C" for function declarations.
@@ -22,6 +32,7 @@ typedef int8_t   i8;
 typedef int16_t  i16;
 typedef int32_t  i32;
 typedef int64_t  i64;
+typedef unsigned int uint;
 
 #include <vector>
 #include <string>
@@ -97,6 +108,3 @@ inline rgb& rgb::operator=(const rgba& color) {
 #define FLOATMAX          3.402823466e+38F  
 #define FLT_MAX          3.402823466e+38F  
 
-#ifndef __INTELLISENSE__
-using namespace bora; // Intellisense is annoying
-#endif

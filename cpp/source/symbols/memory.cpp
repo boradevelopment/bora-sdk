@@ -7,7 +7,6 @@ void deallocate(u64 pointer)
     // Call the global free from the C standard library
     ::free(reinterpret_cast<void*>(pointer));
 }
-
 u64 allocate(u64 size)
 {
     return reinterpret_cast<u64>(::malloc(size));

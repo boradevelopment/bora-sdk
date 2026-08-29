@@ -10,7 +10,7 @@
 #include <array>
 #include <signal.h>
 
-#if defined(_WIN32)
+#if defined(_WIN64)
 #include <windows.h>
 #include <iostream>
 
@@ -32,7 +32,7 @@ int Command::getResult() const {
 }
 
 void Command::kill() {
-#if WIN32
+#ifdef _WIN64
     if (pi.hProcess) {  // pi is your PROCESS_INFORMATION member
         // Forcefully terminate the process
         TerminateProcess(pi.hProcess, 1); // 1 is the exit code
@@ -67,7 +67,7 @@ void Command::kill() {
 }
 
 int Command::execute(std::function<void(const std::string&)> onOutputLine) {
-#if defined(_WIN32)
+#if defined(_WIN64)
     return executeWindows(onOutputLine);
 #else
     return executePosix(onOutputLine);
@@ -84,7 +84,7 @@ std::vector<std::string> Command::buildArgsList() {
     return result;
 }
 
-#if defined(_WIN32)
+#if defined(_WIN64)
 int Command::executeWindows(std::function<void(const std::string&)>& onOutputLine) {
     std::vector<std::string> argList = buildArgsList();
     std::ostringstream oss;
@@ -127,7 +127,7 @@ int Command::executeWindows(std::function<void(const std::string&)>& onOutputLin
                 (LPWSTR)&lpMsgBuf,
                 0, nullptr);
 
-        std::wcerr << L"Win32 API failed with error: " << (LPWSTR)lpMsgBuf << std::endl;
+        std::wcerr << L"Windows API failed with error: " << (LPWSTR)lpMsgBuf << std::endl;
         LocalFree(lpMsgBuf);
 
         CloseHandle(hRead);
@@ -189,6 +189,7 @@ int Command::executeWindows(std::function<void(const std::string&)>& onOutputLin
 
     return resultCode;
 }
+
 #else
 int Command::executePosix(std::function<void(const std::string&)>& onOutputLine) {
     int pipefd[2];

@@ -23,19 +23,14 @@ struct CreateTextureCommandSDK : public ISDKCommand
 };
 
 class bnGraphics : public CommandList {
-private:
-inline static std::unordered_map<const char*, bnGraphics*> guestGraphicsRegistry;
 public:
     bnGraphics(){
         
     }
-    bnGraphics(const char* windowID, const char* bufferID) : CommandList(CommandCategories::NativeGraphics, windowID, bufferID) {
-        guestGraphicsRegistry[windowID] = this;
-    }
+    
+    bnGraphics(const char* windowID, const char* bufferID);
 
-    ~bnGraphics(){
-       guestGraphicsRegistry.erase(name);
-    }
+    ~bnGraphics();
 
     ResourceHandle<ITexture>* CreateTexture(const TextureDesc& desc, const void* initialData = nullptr, ResourceHandle<ITexture>* resource = nullptr) {
         ResourceHandle<ITexture>* tex;
@@ -57,14 +52,17 @@ public:
         Commit();
     }
 
+    static bnGraphics* findGraphicsFromWindowId(const char* windowID);
+
+#ifndef __BORA__STATIC
     EXPORT_ATTR("bora$graphics$bnGraphics$HostSubmit")
     static void HostSubmit(const char* windowID){
-        // todo
+        // todo 
         if (windowID == nullptr) return;
 
-        auto it = guestGraphicsRegistry.find(windowID);
-        if (it != guestGraphicsRegistry.end()) {
-            it->second->Commit();
+        auto graphics = findGraphicsFromWindowId(windowID);
+        if (graphics) {
+            graphics->Commit();
         } else {
             // Handle error: Host asked for a window that doesn't exist
             printf("Error: No graphics instance registered for ID: %s\n", windowID);
@@ -76,13 +74,14 @@ public:
         // todo
         if (windowID == nullptr) return;
 
-        auto it = guestGraphicsRegistry.find(windowID);
-        if (it != guestGraphicsRegistry.end()) {
-            it->second->Clear();
+        auto graphics = findGraphicsFromWindowId(windowID);
+        if (graphics != nullptr) {
+            graphics->Clear();
         } else {
             // Handle error: Host asked for a window that doesn't exist
             printf("Error: No graphics instance registered for ID: %s\n", windowID);
         }
     }
+#endif
 };
 

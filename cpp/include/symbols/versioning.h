@@ -2,7 +2,6 @@
 
 #include <macros>
 
-
 /// @brief This allows you to see the versions of both your sdk and runtime
 namespace bora::versioning {
     /// @brief Get the version of the SDK you're using.

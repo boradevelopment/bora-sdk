@@ -23,7 +23,7 @@
 #include "tools/AppParam.h"
 #include "../tools/Command.h"
 #include "filesystem"
-#if WIN32
+#ifdef _WIN64
 #include <Windows.h>
 #endif
 #include "tools/Env.h"
@@ -62,7 +62,7 @@ static constexpr const char* pathSlash = "";
 static CommandResult OsDependentPathGet(std::filesystem::path& exePath);
 
 CommandResult OsDependentPathGet(std::filesystem::path &exePath) {
-#if WIN32
+#ifdef _WIN64
     wchar_t buffer[MAX_PATH];
     GetModuleFileNameW(NULL, buffer, MAX_PATH);
     exePath = std::filesystem::path(buffer);

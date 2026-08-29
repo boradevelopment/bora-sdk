@@ -3,6 +3,7 @@
 #include "symbols/userWindow.h"
 
 namespace bora {
+inline static std::unordered_map<const char*, bnUserWindow*> guestWindowRegistry;
 
 bnUserWindow::bnUserWindow(WindowConfig config) : configuration(config)
 { 

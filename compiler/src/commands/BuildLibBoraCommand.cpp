@@ -56,7 +56,7 @@ CommandResult BuildLibBoraCommand::execute() {
     compPath.append(devRootPath);
     compPath.append("/sdk/cpp/libs/bora\" ");
     compPath.append(" -as \"cdep\" --nobora");
-    compPath.append(" --include=[\"");
+    compPath.append(" --include [\"");
     compPath.append(devRootPath);
     compPath.append("/global/cpp/contribs/");
     compPath.append("\"]");
