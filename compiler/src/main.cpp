@@ -13,8 +13,8 @@
 #include "commands/CMakeInitalizeCommand.h"
 #include "commands/CmakeBuildCommand.h"
 
-REGISTER_PARAM("as")
-REGISTER_PARAM("output")
+REGISTER_PARAM(as)
+REGISTER_PARAM(output)
 
 int main(int argc, char** argv) {   
     AppParam::registerParam("as");

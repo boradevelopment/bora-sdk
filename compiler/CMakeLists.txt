@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.14)
 project(BORAC C CXX)
 set(CMAKE_CXX_STANDARD 20)
 option(DEBUGGING "Enable Debugging features (pdb, etc)" OFF)
+include(${CMAKE_SOURCE_DIR}/../../global/cmake/common.cmake)
 
 file(GLOB_RECURSE BORA_SOURCES_CONTRIB contribs/*.cpp contribs/*.h contribs/*.hpp ../../global/cpp/contribs/*.h ../../global/cpp/contribs/*.cpp ../../global/cpp/contribs/*.hpp)
 file(GLOB_RECURSE BORA_SOURCES src/*.cpp src/*.h src/*.hpp)
@@ -21,23 +22,13 @@ add_executable(BORAC ${BORA_SOURCES}
         ${BORA_SOURCES_3RDPARTY}
      )
 
-target_compile_options(BORAC PRIVATE
-        $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>:-include${CMAKE_CURRENT_SOURCE_DIR}/../../global/cpp/contribs/TypeDefinitions.h>
-        $<$<CXX_COMPILER_ID:GNU>:-include${CMAKE_CURRENT_SOURCE_DIR}/../../global/cpp/contribs/TypeDefinitions.h>
-        $<$<CXX_COMPILER_ID:MSVC>:/FI${CMAKE_CURRENT_SOURCE_DIR}/../../global/cpp/contribs/TypeDefinitions.h>
-)
-
 
 target_compile_definitions(BORAC PRIVATE
         NOMINMAX
         TAZABASEDIR=\"${CMAKE_SOURCE_DIR}../../global/cpp/contribs/TAZA/code\"
 )
 
-if (LLVM_LINK_LLVM_DYLIB)
-  set(WAMRC_LINK_LLVM_LIBS LLVM)
-else()
-  set(WAMRC_LINK_LLVM_LIBS ${LLVM_AVAILABLE_LIBS})
-endif()
+
 
 
 if (WIN32)
@@ -46,9 +37,9 @@ if (WIN32)
               ${BORA_SOURCES_3RDPARTYDLIB})
 
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-   # file(GLOB_RECURSE BORA_SOURCES_3RDPARTYDLIB ../../global/libs/*.a)
+    target_link_libraries(BORAC PRIVATE stdc++)
     target_link_directories(BORAC PRIVATE ../../global/libs/__linux__)
-
+   target_compile_options(BORAC PRIVATE -include ${CMAKE_SOURCE_DIR}/../../global/cpp/contribs/TypeDefinitions.h)
     target_link_libraries(BORAC PRIVATE
             #${BORA_SOURCES_3RDPARTYDLIB}
             -lbrotlienc -lbrotlidec -lbrotlicommon
@@ -65,3 +56,9 @@ elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
             -lbrotlienc -lbrotlidec -lbrotlicommon
     )
 endif()
+
+set_target_properties(BORAC PROPERTIES
+        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${SYSTEM_NAME_LOWER}/${ARCH}"
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${SYSTEM_NAME_LOWER}/${ARCH}"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${SYSTEM_NAME_LOWER}/${ARCH}"
+)

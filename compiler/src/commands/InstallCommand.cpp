@@ -48,12 +48,12 @@ CommandResult InstallCommand::execute() {
         return CommandResult::DependencyMissing;
     }
 
-    if(Command(cmdApp, {{cmdCode, depsFolder.string() + "/emsdk" + R"(/emsdk install latest)" }}).execute() != 0){
+    if(Command(cmdApp, {{cmdCode, depsFolder.string() + "/emsdk" + R"(/emsdk install 4.0.23)" }}).execute() != 0){
         printf("Emscripten failed to install it's tools, check logs\n");
         return CommandResult::DependencyMissing;
     }
 
-    if(Command(cmdApp, {{cmdCode, depsFolder.string() + "/emsdk" + R"(/emsdk activate latest)"}}).execute() != 0){
+    if(Command(cmdApp, {{cmdCode, depsFolder.string() + "/emsdk" + R"(/emsdk activate 4.0.23)"}}).execute() != 0){
         printf("Emscripten failed to activate it's tools, check logs\n");
         return CommandResult::DependencyMissing;
     }

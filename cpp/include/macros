@@ -1,7 +1,7 @@
 // This is NOT apart of the Bora SDK, but a macro header file for the Bora SDK.
 // It may not be recommanded to include this file directly, but rather include the Bora SDK header file (bora.h).
 #pragma once
-#if defined(__INTELLISENSE__) || defined(__BORA__STATIC)
+#if defined(__INTELLISENSE__)
 #define intellisense
 #define IMPORT_ATTR(workspace, function) // C++ IntelliSense does not support Clang attributes for VSCODE [Do not worry, this is just for IntelliSense]
 #define EXPORT_ATTR(name)

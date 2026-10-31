@@ -9,7 +9,7 @@ bnUserWindow::bnUserWindow(WindowConfig config) : configuration(config)
 { 
     guestWindowRegistry[(const char*)config.id] = this;
     windowOffset = createWindow(configuration.id, reinterpret_cast<void*>(config.update));
-    graphics = bnGraphics(std::to_string(windowOffset).c_str(), std::to_string(windowOffset).c_str());
+    graphics = new bnGraphics(std::to_string(windowOffset).c_str(), std::to_string(windowOffset).c_str());
 }
 
 bnUserWindow::~bnUserWindow()
@@ -35,7 +35,7 @@ void bnUserWindow::close()
 
 bnGraphics* bnUserWindow::getGraphics()
 {
-    return &graphics;
+    return graphics;
 }
 }
 

@@ -18,6 +18,9 @@ namespace bora {
 #include "symbols/memory.h" // MEMORY IS REQUIRED ALWAYS!
 #include "symbols/versioning.h"
 #include "symbols/exceptionHandle.h"
+#include "symbols/common/Command.h"
+#include "symbols/common/CommandBase.h"
+#include "symbols/common/CommandList.h"
 
 #ifndef B_NOOPT_INCLUDE
 #ifndef B_NOINPUT

@@ -1,7 +1,9 @@
 #pragma once
 #include "symbols/common/CommandList.h"
+#include "symbols/common/CommandBase.h"
 #include "nCommon/CommandListCategories.h"
 #include "symbols/nMemory.h"
+
 struct TestCommandSDK : public ISDKCommand
 {
     TestCommandData data;
@@ -18,31 +20,63 @@ struct TestCommandSDK : public ISDKCommand
     static constexpr const char* RuntimeCategory() { return CommandCategories::NativeTesting; }
 };
 
-class TestCommandList : public CommandList {
-public:
-    TestCommandList() : CommandList(CommandCategories::NativeTesting, "Test") {
-    //    mBuffer.data.reserve(4999 * (sizeof(SerializedCommandHeader) + sizeof(TestCommandData)));
-    }
+// struct TestOnWasmSDK : public ISDKCommand
+// {
+//     TestCommandData data;
+    
+//     TestCommandSDK(int value)
+//     {
+//         data.value = value+5;
+//         // data.ints[0] = value;
+//         // data.ints[1] = value+1;
+//     }
 
-    void TestTheCommand(TestCommandSDK& value){
-        mBuffer.Push(value);
-        Commit();
-    }
+//     static constexpr const char* RuntimeName() { return "TestCommand"; }
+//     static constexpr const char* RuntimeCategory() { return CommandCategories::NativeTesting; }
+// };
 
-    void JustPush(TestCommandSDK& value){
-        mBuffer.Push(value);
-    }
+// class TestCommandList : public CommandList {
+// public:
+//     TestCommandList() : CommandList(CommandCategories::NativeTesting, "Test") {
+//     //    mBuffer.data.reserve(4999 * (sizeof(SerializedCommandHeader) + sizeof(TestCommandData)));
+//     }
 
-    CommandBufferData GetData(){
-        return mBuffer.data;
-    }
+//     void TestTheCommand(TestCommandSDK& value){
+//         mBuffer.Push(value);
+//         Commit();
+//     }
 
-    void Clear(){
-        mBuffer.data.clear();
-        Commit();
-    }
+//     void JustPush(TestCommandSDK& value){
+//         mBuffer.Push(value);
+//     }
 
-    void JustCommit(){
-        Commit();
-    }
-};
+//     CommandBufferData GetData(){
+//         return mBuffer.data;
+//     }
+
+//     void Clear(){
+//         mBuffer.data.clear();
+//         Commit();
+//     }
+
+//     void JustCommit(){
+//         Commit();
+//     }
+// };
+
+
+// class TestCommand : public bora::WasmCommandBase {
+// public:
+//     const char* GetCategory() const override { return CommandCategories::NativeTesting; }
+//     const char* GetName() const override { return "TestOnWasm"; }
+
+//     TestCommandData data;
+
+//     void Execute(void* payload) override {
+
+//         printf("Whatsup danger!");
+//     }
+// };
+
+// BORA_REGISTER_COMMAND(TestCommand);
+

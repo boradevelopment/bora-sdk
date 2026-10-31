@@ -16,9 +16,11 @@
 
 #include "symbols/graphics/graphics.h"
 
+using namespace bora;
+
 inline static std::unordered_map<const char*, bnGraphics*> guestGraphicsRegistry;
 
-bnGraphics::bnGraphics(const char *windowID, const char *bufferID) : CommandList(CommandCategories::NativeGraphics, windowID, bufferID)
+bnGraphics::bnGraphics(const char *windowID, const char *bufferID) : ICommandList(CommandCategories::NativeGraphics, windowID, bufferID)
 {
         guestGraphicsRegistry[windowID] = this;
 }

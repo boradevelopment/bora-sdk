@@ -1,0 +1,3 @@
+// Stub to intervene usages of the std library
+
+#error "The std library (<thread>) should NOT be used in any BORA context, please use the bora::thread instead!"

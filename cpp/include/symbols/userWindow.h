@@ -71,6 +71,6 @@ public:
     WindowConfig configuration; 
 private:
     u64 windowOffset;
-    bnGraphics graphics;
+    bnGraphics* graphics;
 };
 }

@@ -11,10 +11,11 @@
 #include <climits>
 #endif
 
-REGISTER_PARAM("id")
-REGISTER_PARAM_AD("define", {"-D"}, "Preprocessor macro definitions");
-REGISTER_PARAM_AD("exportall", {"-ea"}, "Preprocessor macro definitions");
-REGISTER_PARAM_AD("mainmodule", {"-mm"}, "Preprocessor macro definitions");
+REGISTER_PARAM(id)
+REGISTER_PARAM_AD(define, {"-D"}, "Preprocessor macro definitions");
+REGISTER_PARAM_AD(exportall, {"-ea"}, "Preprocessor macro definitions");
+REGISTER_PARAM_AD(mainmodule, {"-mm"}, "Preprocessor macro definitions");
+REGISTER_PARAM_AD(maxthreadsize, {"-mts"}, "Maximum amount of threads possible in the application.");
 
 CommandResult BuildCommand::execute() {
     std::filesystem::path exePath;
@@ -69,6 +70,9 @@ CommandResult BuildCommand::execute() {
         logo = LR"(./borat.png)";
     }
 
+    auto maxthreadsize = AppParam::getValue<int>("maxthreadsize");
+    if (maxthreadsize == 0) maxthreadsize = -1;
+
     auto isDebug = AppParam::has("debug");
     auto inputFile = AppParam::get("");
     if(inputFile.empty()) return CommandResult::InvalidArguments;
@@ -87,8 +91,9 @@ CommandResult BuildCommand::execute() {
         {
             binaryID = outputPath.filename().stem().wstring();
         }
-        std::string compPath(emBaseFolder.string() + "em++ -s ERROR_ON_UNDEFINED_SYMBOLS=0 -s MEMORY64=1 ");
+        std::string compPath(emBaseFolder.string() + "em++ -s SHARED_MEMORY=1 -std=c++20 -s ERROR_ON_UNDEFINED_SYMBOLS=0 -s MEMORY64=1 ");
         std::string args("");
+        args.append(" -include \""+sdkPath + "/include/definitions.h\" ");
          if(!AppParam::has("nobora")) args.append("-I \""+sdkPath + "/include\" -I \""+sdkPath + "/bin/include\"");
         for (const auto& path : includeDirectories) {
             args.append(" -I\"");
@@ -97,10 +102,10 @@ CommandResult BuildCommand::execute() {
         }
         args.append("  -o " + bwasmPath.string());
         args.append(" "+wstringToUtf8(inputFile));
-        args.append(" -Wno-deprecated -Wdeprecated-declarations -Wl,--stack-first -s STACK_SIZE=1MB -Wl,--export=__wasm_apply_relocs -Wl,--export=__wasm_apply_global_relocs  -Wl,--export-memory -s STANDALONE_WASM -s RELOCATABLE=1 -fvisibility=hidden -fvisibility-inlines-hidden -s IMPORTED_MEMORY=1 -Wl,--import-memory -Wl,--gc-sections -s MAXIMUM_MEMORY=16gb -s ALLOW_MEMORY_GROWTH=1 ");
-            if(!AppParam::has("nobora")) args.append("  -Wl,--export=__call_dtors -Wl,--export=get_bora_sdk_version -Wl,--export=get_bora_sdk_version_major -Wl,--export=get_bora_sdk_version_minor -Wl,--export=get_bora_sdk_mode -Wl,--no-whole-archive \""+sdkPath + R"(/libs/libbora.bcdep")");
+        args.append(" -Wno-deprecated -Wdeprecated-declarations -Wl,--stack-first -s STACK_SIZE=1MB -Wl,--export=__wasm_apply_relocs -Wl,--export=__wasm_apply_global_relocs  -Wl,--export-memory -s STANDALONE_WASM -s RELOCATABLE=1 -fvisibility=hidden -fvisibility-inlines-hidden -s IMPORTED_MEMORY=1 -Wl,--import-memory -Wl,--gc-sections -s INITIAL_MEMORY=16gb -s MAXIMUM_MEMORY=16gb ");
+            if(!AppParam::has("nobora")) args.append(" -Wl,--export=malloc -Wl,--export=free -Wl,--export=__call_dtors -Wl,--export=get_bora_sdk_version -Wl,--export=get_bora_sdk_version_major -Wl,--export=get_bora_sdk_version_minor -Wl,--export=get_bora_sdk_mode -Wl,--no-whole-archive \""+sdkPath + R"(/libs/libbora.bcdep")");
 
-        args.append(" -D__BORA__ID=\""+wstringToUtf8(binaryID)+"\"");
+        args.append(" -D__BORA__ -D__BORA__ID=\""+wstringToUtf8(binaryID)+"\"");
         if (isApp)
         {
             args.append(" -D__BORA__APPLICATION");
@@ -140,6 +145,7 @@ CommandResult BuildCommand::execute() {
     {
         V2Archive archive(outputPath.filename().wstring(), outputPath.string(), L"This is a BORA Binary File! You shouldn't touch anything unless you know what you're doing...");
         if (isDebug) archive.nocompression = true;
+        archive.header.customVariables[L"maxThreads"] = maxthreadsize;
         archive.header.customVariables[L"id"] = binaryID;
         archive.header.customVariables[L"entry"] = bwasmPath.filename().stem().wstring();
         if (isApp) {
@@ -171,8 +177,8 @@ CommandResult BuildCommand::execute() {
     } else if(asParam == L"cdep"){
         std::filesystem::path outputPath(output);
         auto bwasmPath = std::filesystem::path(outputPath.parent_path().string() +"/bwasm.o");
-        std::string compPath(emBaseFolder.string() + "em++ -s MEMORY64=1 ");
-        std::string args(" -s RELOCATABLE=1  -Wno-deprecated -Wdeprecated-declarations -fPIC -c -I");
+        std::string compPath(emBaseFolder.string() + "em++ -s SHARED_MEMORY=1 -s MEMORY64=1 ");
+        std::string args(" -std=c++20  -s RELOCATABLE=1  -Wno-deprecated -Wdeprecated-declarations -fPIC -c -I");
         args.append("\""+sdkPath + "/include\" ");
         for (const auto& path : includeDirectories) {
             args.append("-I\"");
