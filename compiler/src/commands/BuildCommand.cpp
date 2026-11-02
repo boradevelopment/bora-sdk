@@ -102,7 +102,7 @@ CommandResult BuildCommand::execute() {
         }
         args.append("  -o " + bwasmPath.string());
         args.append(" "+wstringToUtf8(inputFile));
-        args.append(" -Wno-deprecated -Wdeprecated-declarations -Wl,--stack-first -s STACK_SIZE=1MB -Wl,--export=__wasm_apply_relocs -Wl,--export=__wasm_apply_global_relocs  -Wl,--export-memory -s STANDALONE_WASM -s RELOCATABLE=1 -fvisibility=hidden -fvisibility-inlines-hidden -s IMPORTED_MEMORY=1 -Wl,--import-memory -Wl,--gc-sections -s INITIAL_MEMORY=16gb -s MAXIMUM_MEMORY=16gb ");
+        args.append(" -Wno-deprecated -Wdeprecated-declarations -Wl,--stack-first -s STACK_SIZE=1MB -Wl,--export=__wasm_apply_relocs -Wl,--export=__wasm_apply_global_relocs  -Wl,--export-memory -s STANDALONE_WASM -s RELOCATABLE=1 -fvisibility=hidden -fvisibility-inlines-hidden -s IMPORTED_MEMORY=1 -Wl,--import-memory -Wl,--gc-sections -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=128gb -s MAXIMUM_MEMORY=128gb ");
             if(!AppParam::has("nobora")) args.append(" -Wl,--export=malloc -Wl,--export=free -Wl,--export=__call_dtors -Wl,--export=get_bora_sdk_version -Wl,--export=get_bora_sdk_version_major -Wl,--export=get_bora_sdk_version_minor -Wl,--export=get_bora_sdk_mode -Wl,--no-whole-archive \""+sdkPath + R"(/libs/libbora.bcdep")");
 
         args.append(" -D__BORA__ -D__BORA__ID=\""+wstringToUtf8(binaryID)+"\"");
